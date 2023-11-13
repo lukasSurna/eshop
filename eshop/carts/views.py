@@ -63,7 +63,10 @@ def cart(request, total=0, quantity=0, cart_items=None):
            
     except ObjectDoesNotExist:
         pass
-    
+        
+        tax = 0
+        grand_total = 0
+            
     context = {
         'total': total,
         'quantity': quantity,
