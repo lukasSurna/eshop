@@ -27,34 +27,6 @@
         </article>
         <article class="filter-group">
             <header class="card-header">
-                <a href="#" data-toggle="collapse" data-target="#collapse_4" aria-expanded="true" class="">
-                    <i class="icon-control fa fa-chevron-down"></i>
-                    <h6 class="title">Sizes </h6>
-                </a>
-            </header>
-            <div class="filter-content collapse show" id="collapse_4" style="">
-                <div class="card-body">
-                  <label class="checkbox-btn">
-                    <input type="checkbox">
-                    <span class="btn btn-light"> XS </span>
-                  </label>
-                  <label class="checkbox-btn">
-                    <input type="checkbox">
-                    <span class="btn btn-light"> SM </span>
-                  </label>
-                  <label class="checkbox-btn">
-                    <input type="checkbox">
-                    <span class="btn btn-light"> LG </span>
-                  </label>
-                  <label class="checkbox-btn">
-                    <input type="checkbox">
-                    <span class="btn btn-light"> XXL </span>
-                  </label>
-            </div>
-            </div>
-        </article>  
-        <article class="filter-group">
-            <header class="card-header">
                 <a href="#" data-toggle="collapse" data-target="#collapse_3" aria-expanded="true" class="">
                     <i class="icon-control fa fa-chevron-down"></i>
                     <h6 class="title">Price range </h6>
@@ -97,6 +69,7 @@
             </div>
     </header>
     <div class="row">
+        {% if products %}
         {% for product in products  %}
             <div class="col-md-4">
                 <figure class="card card-product-grid">
@@ -118,7 +91,12 @@
                     </figcaption>
                 </figure>
             </div>
-        {% endfor %}    
+        {% endfor %}
+        {% else %}
+        <div class="col-12">
+            <h2 class="text-center d-flex justify-content-center">No items found</h2>
+        </div>
+        {% endif %}
     </div> 
     <nav class="mt-4" aria-label="Page navigation sample">
         {% if products.has_other_pages %}
