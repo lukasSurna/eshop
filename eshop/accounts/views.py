@@ -43,7 +43,7 @@ def register(request):
             to_email = email
             send_email = EmailMessage(mail_subject, message, to=[to_email])
             send_email.send()
-            return redirect('accounts/login/?command=verification&email='+email)
+            return redirect('/accounts/login/?command=verification&email='+email)
     else:           
         form = forms.RegistrationForm()
     context = {
@@ -65,7 +65,7 @@ def login(request):
         else:
             messages.error(request, "Username or password is invalid.")
             return redirect('login')
-    return render(request, 'login.html')
+    return render(request, 'accounts/login.html')
 
 @login_required(login_url = 'login')
 def logout(request):
