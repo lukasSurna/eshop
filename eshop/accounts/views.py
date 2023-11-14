@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from . import forms, models
-from django.contrib import messages
+from django.contrib import messages, auth
+from django.contrib.auth.decorators import login_required
 
 def register(request):
     if request.method == 'POST':
@@ -32,7 +33,23 @@ def register(request):
     return render(request, 'accounts/register.html', context)
 
 def login(request):
+    if request.method == 'POST':
+        email = request.POST['email']
+        password = request.POST['password']
+        
+        user = auth.authenticate(email=email, password=password)
+        
+        if user is not None:
+            auth.login(request, user)
+            messages.success(request, "You are logged in")
+            return redirect('index')
+        else:
+            messages.error(request, "Username or password is invalid.")
+            return redirect('login')
     return render(request, 'accounts/login.html')
 
+@login_required(login_url = 'login')
 def logout(request):
-    return
+    auth.logout(request)
+    messages.success(request, "You are logged out")
+    return redirect('login')
