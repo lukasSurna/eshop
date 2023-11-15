@@ -11,6 +11,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
+import requests
 
 def register(request):
     if request.method == 'POST':
@@ -60,6 +61,7 @@ def login(request):
         
         user = auth.authenticate(email=email, password=password)
         
+        #Assign user to cart item
         if user is not None:
             try:
                 cart = models.Cart.objects.get(cart_id=_cart_id(request))
@@ -70,10 +72,22 @@ def login(request):
                         item.user = user
                         item.save()
             except:
-                pass
+                #if cart is empty
+                pass 
             auth.login(request, user)
             messages.success(request, "You are logged in")
-            return redirect('dashboard')
+            #grab previous url. 
+            url = request.META.get('HTTP_REFERER')
+            try:
+                query = requests.utils.urlparse(url).query
+                print("query...", query)
+                params = dict(x.split('=') for x in query.split('&'))
+                if 'next' in params:
+                    next_page = params['next']
+                    return redirect(next_page)
+                print('params ->', params)
+            except:
+                return redirect('dashboard')
         else:
             messages.error(request, "Username or password is invalid.")
             return redirect('login')
