@@ -148,3 +148,4 @@ def password_reset(request):
             messages.error(request, "Password do not match")
             return render('password_reset')
     return render(request, 'accounts/password_reset.html')
+
