@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from . import forms, models
+from carts import models
+from carts.views import _cart_id
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -59,6 +61,16 @@ def login(request):
         user = auth.authenticate(email=email, password=password)
         
         if user is not None:
+            try:
+                cart = models.Cart.objects.get(cart_id=_cart_id(request))
+                cart_item_exists = models.CartItem.objects.filter(cart=cart).exists()
+                if cart_item_exists:
+                    cart_item = models.CartItem.objects.filter(cart=cart)
+                    for item in cart_item:
+                        item.user = user
+                        item.save()
+            except:
+                pass
             auth.login(request, user)
             messages.success(request, "You are logged in")
             return redirect('dashboard')
