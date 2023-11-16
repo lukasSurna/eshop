@@ -5,6 +5,28 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 
+class Payment(models.Model):
+    user = models.ForeignKey(
+        Account, 
+        verbose_name=_("user"), 
+        on_delete=models.CASCADE,
+    )
+    payment_id = models.CharField(_("payment id"), max_length=100)
+    amount_paid = models.CharField(_("amount paid"), max_length=100)
+    status = models.CharField(_("status"), max_length=100)
+    created_at = models.DateTimeField(_("created at"), auto_now=False, auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("payment")
+        verbose_name_plural = _("payments")
+
+    def __str__(self):
+        return f"{self.payment_id}"
+
+    def get_absolute_url(self):
+        return reverse("payment_detail", kwargs={"pk": self.pk})
+
+
 class Order(models.Model):
     STATUS = (
         (0, 'New'),
@@ -17,6 +39,13 @@ class Order(models.Model):
         Account, 
         verbose_name=_("user"), 
         on_delete=models.SET_NULL,
+        null=True,
+    )
+    payment = models.ForeignKey(
+        Payment, 
+        verbose_name=_("payment"), 
+        on_delete=models.SET_NULL,
+        blank=True,
         null=True,
     )
 
@@ -43,6 +72,12 @@ class Order(models.Model):
         verbose_name = _("order")
         verbose_name_plural = _("orders")
 
+    def full_name(self):
+        return f'{self.first_name} {self.last_name}'
+    
+    def full_address(self):
+        return f'{self.address_1} {self.address_2}'
+
     def __str__(self):
         return f"{self.first_name}"
 
@@ -65,6 +100,13 @@ class OrderProduct(models.Model):
         Product, 
         verbose_name=_("product"), 
         on_delete=models.CASCADE,
+    )
+    payment = models.ForeignKey(
+        Payment, 
+        verbose_name=_("payment"), 
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
     )
     quantity = models.IntegerField(_("quantity"))
     product_price = models.FloatField(_("product price"))

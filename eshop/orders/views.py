@@ -4,7 +4,8 @@ from orders.models import Order
 from . import forms
 import datetime
 
-
+def payment(request):
+    return render(request, 'payment.html')
 
 def place_order(request, total=0, quantity=0):
     current_user = request.user
@@ -53,7 +54,15 @@ def place_order(request, total=0, quantity=0):
             order_number = current_date + str(data.id)
             data.order_number = order_number
             data.save()
-            return redirect('checkout')
+    
+            context = {
+                'order': data,
+                'cart_items': cart_items,
+                'total': total,
+                'tax': tax,
+                'grand_total': grand_total,
+            }
+            return render(request, 'payment.html', context)
     else:
          form = forms.OrderForm()
     return render(request, 'checkout.html', {'form': form})
