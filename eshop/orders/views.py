@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from carts.models import CartItem
 from orders.models import Order, OrderProduct
 from shop.models import Product
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 from . import forms
 import datetime
 
@@ -75,6 +77,19 @@ def place_order(request, total=0, quantity=0):
                 product = Product.objects.get(id=cart_item.product_id)
                 product.stock -= cart_item.quantity
                 product.save()
+            
+            #Clear Cart
+            CartItem.objects.filter(user=request.user).delete()
+            
+            #Order received Email
+            mail_subject = 'Confirmation of Your Recent Order'
+            message = render_to_string('order_received_email.html', {
+                'user': request.user,
+                'order': data,
+            })
+            to_email = request.user.email
+            send_email = EmailMessage(mail_subject, message, to=[to_email])
+            send_email.send()
             
             context = {
                 'order': data,
