@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect
 from carts.models import CartItem
-from orders.models import Order
+from orders.models import Order, OrderProduct
+from shop.models import Product
 from . import forms
 import datetime
 
-def payment(request):
-    return render(request, 'payment.html')
+def order(request):
+    return render(request, 'order.html')
 
 def place_order(request, total=0, quantity=0):
     current_user = request.user
@@ -13,7 +14,7 @@ def place_order(request, total=0, quantity=0):
     #if cart is empty, redirect to store
     cart_items = CartItem.objects.filter(user=current_user)
     cart_count = cart_items.count()
-    if cart_count <=0:
+    if cart_count <= 0:
         return redirect('store')
     
     grand_total = 0
@@ -22,15 +23,31 @@ def place_order(request, total=0, quantity=0):
         total += (cart_item.product.price * cart_item.quantity)
         quantity += cart_item.quantity
     
-    tax = (5 * total)/100
+    tax = (5 * total) / 100
     grand_total = tax + total
     
-    
+    # Order instance
+    data = Order()
+    data.user = request.user
+    data.order_total = grand_total
+    data.tax = tax
+    data.ip = request.META.get('REMOTE_ADDR')  # get user IP
+    data.save()  # save to get id
+
+    # Generate order number
+    yr = int(datetime.date.today().strftime('%Y'))
+    mt = int(datetime.date.today().strftime('%m'))
+    dt = int(datetime.date.today().strftime('%d'))
+    date = datetime.date(yr, mt, dt)
+    current_date = date.strftime('%Y%m%d')
+    order_number = current_date + str(data.id)
+    data.order_number = order_number
+    data.save()
+
     if request.method == 'POST':
         form = forms.OrderForm(request.POST)
         if form.is_valid():
-            #store billing information inside Order table
-            data = Order()
+            # Store billing information inside Order table
             data.first_name = form.cleaned_data['first_name']
             data.last_name = form.cleaned_data['last_name']
             data.phone = form.cleaned_data['phone']
@@ -41,20 +58,24 @@ def place_order(request, total=0, quantity=0):
             data.zip_code = form.cleaned_data['zip_code']
             data.city = form.cleaned_data['city']
             data.order_comment = form.cleaned_data['order_comment']
-            data.order_total = grand_total
-            data.tax = tax
-            data.ip = request.META.get('REMOTE_ADDR') #get user IP
-            data.save() #save to get id
-            #Generate order number
-            yr = int(datetime.date.today().strftime('%Y'))
-            mt = int(datetime.date.today().strftime('%m'))
-            dt = int(datetime.date.today().strftime('%d'))
-            date = datetime.date(yr,mt,dt)
-            current_date = date.strftime('%Y%m%d')
-            order_number = current_date + str(data.id)
-            data.order_number = order_number
-            data.save()
-    
+            data.save()  # save to update order information
+
+            # CartItems to OrderProducts table
+            for cart_item in cart_items:
+                order_product = OrderProduct()
+                order_product.order = data
+                order_product.user= request.user
+                order_product.product_id = cart_item.product_id
+                order_product.quantity = cart_item.quantity
+                order_product.product_price = cart_item.product.price
+                order_product.ordered = True
+                order_product.save()
+                
+                #Reduce qty of product
+                product = Product.objects.get(id=cart_item.product_id)
+                product.stock -= cart_item.quantity
+                product.save()
+            
             context = {
                 'order': data,
                 'cart_items': cart_items,
@@ -62,8 +83,7 @@ def place_order(request, total=0, quantity=0):
                 'tax': tax,
                 'grand_total': grand_total,
             }
-            return render(request, 'payment.html', context)
+            return render(request, 'order.html', context)
     else:
-         form = forms.OrderForm()
+        form = forms.OrderForm()
     return render(request, 'checkout.html', {'form': form})
-            
