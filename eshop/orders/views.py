@@ -12,6 +12,7 @@ def order_complete(request, order_id):
     order = Order.objects.get(pk=order_id)
     order_products = OrderProduct.objects.filter(order=order)
     subtotal = sum(order_product.product_price for order_product in order_products)
+    subtotal + order.tax,
     context = {
         'order': order,
         'order_products': order_products,
