@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from carts.models import CartItem
 from orders.models import Order, OrderProduct
 from shop.models import Product
@@ -7,13 +8,23 @@ from django.template.loader import render_to_string
 from . import forms
 import datetime
 
-def order(request):
-    return render(request, 'order.html')
+def order_complete(request, order_id):
+    order = Order.objects.get(pk=order_id)
+    order_products = OrderProduct.objects.filter(order=order)
+    subtotal = sum(order_product.product_price for order_product in order_products)
+    context = {
+        'order': order,
+        'order_products': order_products,
+        'subtotal': subtotal,
+        'tax': order.tax,
+        'grand_total': subtotal + order.tax,
+    }
+    return render(request, 'order_complete.html', context)
 
 def place_order(request, total=0, quantity=0):
     current_user = request.user
     
-    #if cart is empty, redirect to store
+    # if cart is empty, redirect to store
     cart_items = CartItem.objects.filter(user=current_user)
     cart_count = cart_items.count()
     if cart_count <= 0:
@@ -24,7 +35,7 @@ def place_order(request, total=0, quantity=0):
     for cart_item in cart_items:
         total += (cart_item.product.price * cart_item.quantity)
         quantity += cart_item.quantity
-    
+
     tax = (5 * total) / 100
     grand_total = tax + total
     
@@ -73,15 +84,15 @@ def place_order(request, total=0, quantity=0):
                 order_product.ordered = True
                 order_product.save()
                 
-                #Reduce qty of product
+                # Reduce qty of product
                 product = Product.objects.get(id=cart_item.product_id)
                 product.stock -= cart_item.quantity
                 product.save()
             
-            #Clear Cart
+            # Clear Cart
             CartItem.objects.filter(user=request.user).delete()
             
-            #Order received Email
+            # Order received Email
             mail_subject = 'Confirmation of Your Recent Order'
             message = render_to_string('order_received_email.html', {
                 'user': request.user,
@@ -91,14 +102,8 @@ def place_order(request, total=0, quantity=0):
             send_email = EmailMessage(mail_subject, message, to=[to_email])
             send_email.send()
             
-            context = {
-                'order': data,
-                'cart_items': cart_items,
-                'total': total,
-                'tax': tax,
-                'grand_total': grand_total,
-            }
-            return render(request, 'order.html', context)
+            # Use reverse to get the URL of the order_complete view
+            return redirect(reverse('order_complete', args=[data.id]))
     else:
         form = forms.OrderForm()
     return render(request, 'checkout.html', {'form': form})
