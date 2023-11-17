@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from . import forms, models
+from orders.models import Order
 from carts import models
 from carts.views import _cart_id
 from django.contrib import messages, auth
@@ -117,7 +118,12 @@ def activate(request, uidb64, token):
     
 @login_required(login_url= 'login')
 def dashboard(request):
-    return render(request, 'accounts/dashboard.html')
+    orders = Order.objects.order_by('-created_at').filter(user_id=request.user.id)
+    orders_count = orders.count()
+    context = {
+        'orders_count': orders_count, 
+    }
+    return render(request, 'accounts/dashboard.html', context)
 
 def forgot_password(request):
     if request.method == 'POST':
