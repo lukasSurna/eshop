@@ -3,7 +3,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from . import forms, models
 from accounts.models import UserProfile, Account
-from orders.models import Order
+from orders.models import Order, OrderProduct
 from carts import models
 from carts.views import _cart_id
 from django.contrib import messages, auth
@@ -128,8 +128,11 @@ def activate(request, uidb64, token):
 def dashboard(request):
     orders = Order.objects.order_by('-created_at').filter(user_id=request.user.id)
     orders_count = orders.count()
+    #user profile pic from DB
+    user_profile = UserProfile.objects.get(user_id=request.user.id)
     context = {
-        'orders_count': orders_count, 
+        'orders_count': orders_count,
+        'user_profile': user_profile,
     }
     return render(request, 'accounts/dashboard.html', context)
 
@@ -191,7 +194,7 @@ def password_reset(request):
 
 @login_required(login_url='login')
 def my_orders(request):
-    orders = Order.objects.filter(user=request.user, is_ordered=True).order_by('-created_at')
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
     context = {
         'orders': orders
     }
@@ -244,3 +247,21 @@ def change_password(request):
             messages.error(request, 'Password does not match')
             return redirect('change_password')
     return render(request, 'accounts/change_password.html')
+
+
+def order_detail(request, order_id):
+    order_detail = OrderProduct.objects.filter(order__order_number=order_id)
+    order = Order.objects.get(order_number=order_id)
+    #Calculate subtotal
+    subtotal = sum(order_product.product_price * order_product.quantity for order_product in order_detail)
+    #Calculate grand total (including tax)
+    grand_total = subtotal + order.tax
+
+    context = {
+        'order_detail': order_detail,
+        'order': order,
+        'subtotal': subtotal,
+        'grand_total': grand_total,
+    }
+
+    return render(request, 'accounts/order_detail.html', context)
