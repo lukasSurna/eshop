@@ -181,3 +181,9 @@ def password_reset(request):
             return render('password_reset')
     return render(request, 'accounts/password_reset.html')
 
+def my_orders(request):
+    orders = Order.objects.filter(user=request.user, is_ordered=True).order_by('-created_at')
+    context = {
+        'orders': orders
+    }
+    return render(request, 'accounts/my_orders.html', context)

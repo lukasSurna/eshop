@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="section-conten padding-y bg">
+{% include "inc/alerts.html" %}
+<div class="container">
+    <div class="row">
+        {% include "inc/dashboard_sidebar.html" %}
+    <main class="col-md-9">
+        <article class="card">
+        <header class="card-header">
+            <strong class="d-inline-block mr-3">Order History: </strong>
+        </header>
+        <div class="card-body">
+            <div class="row"> 
+                <div class="col-md-12">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">Date</th>
+                                <th scope="col">Order #</th>
+                                <th scope="col">Billing Name</th>
+                                <th scope="col">Phone</th>
+                                <th scope="col">Order Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <th class="row">{{ order.created_at }}</th>
+                                <td>{{ order.order_number }}</td>
+                                <td>{{ order.full_name }}</td>
+                                <td>{{ order.phone }}</td>
+                                <td>€{{ order.order_total }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div> 
+        </div> 
+        </article>  
+    </main>
+</div> 
+</div>
+</section>
+
+{% endblock content %}
