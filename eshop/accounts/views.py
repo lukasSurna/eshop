@@ -1,7 +1,8 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from . import forms, models
+from accounts.models import UserProfile, Account
 from orders.models import Order
 from carts import models
 from carts.views import _cart_id
@@ -14,6 +15,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 import requests
 
+#user registration form
 def register(request):
     if request.method == 'POST':
         form = forms.RegistrationForm(request.POST)
@@ -35,7 +37,13 @@ def register(request):
             user.phone_number = phone_number
             user.save()
             
-            #activation https://medium.com/@frfahim/django-registration-with-confirmation-email-bb5da011e4ef
+            #Create User Profile
+            profile = UserProfile()
+            profile.user_id = user.id
+            profile.profile_picture = 'default/default-user.png'
+            profile.save()
+            
+            #activation email https://medium.com/@frfahim/django-registration-with-confirmation-email-bb5da011e4ef
             current_site = get_current_site(request)
             mail_subject = 'Activate your account'
             message = render_to_string('accounts/account_verification_email.html', {
@@ -181,9 +189,58 @@ def password_reset(request):
             return render('password_reset')
     return render(request, 'accounts/password_reset.html')
 
+@login_required(login_url='login')
 def my_orders(request):
     orders = Order.objects.filter(user=request.user, is_ordered=True).order_by('-created_at')
     context = {
         'orders': orders
     }
     return render(request, 'accounts/my_orders.html', context)
+
+@login_required(login_url='login')
+def edit_profile(request):
+    user_profile = get_object_or_404(UserProfile, user=request.user)
+    if request.method == 'POST':
+        user_form = forms.UserForm(request.POST, instance=request.user)
+        profile_form = forms.UserProfileForm(request.POST, request.FILES, instance=user_profile)
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, "Your profile has been updated")
+            return redirect('edit_profile')
+    else:
+        user_form = forms.UserForm(instance=request.user)
+        profile_form = forms.UserProfileForm(instance=user_profile)
+    
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'user_profile': user_profile,
+    }
+    
+    return render (request, 'accounts/edit_profile.html', context)
+
+@login_required(login_url='login')
+def change_password(request):
+    if request.method == 'POST':
+        current_password = request.POST['current_password']
+        new_password = request.POST['new_password']
+        confirm_password = request.POST['confirm_password']
+        
+        user =Account.objects.get(username__exact=request.user.username)
+        print(f'new_password: "{new_password}"')
+        print(f'confirm_password: "{confirm_password}"')
+        if new_password == confirm_password:
+            success = user.check_password(current_password)
+            if success:
+                user.set_password(new_password)
+                user.save()
+                messages.success(request, 'Password changed succesfully')
+                return redirect('change_password')
+            else:
+                messages.error(request, 'PLease enter valid current password')
+                return redirect('change_password')
+        else:
+            messages.error(request, 'Password does not match')
+            return redirect('change_password')
+    return render(request, 'accounts/change_password.html')

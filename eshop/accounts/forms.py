@@ -32,4 +32,25 @@ class RegistrationForm(forms.ModelForm):
         self.fields['email'].widget.attrs['placeholder'] = 'Enter Your E-mail'
         for field in self.fields:
             self.fields[field].widget.attrs['class'] = 'form-control'
+    
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = models.Account
+        fields = ('first_name', 'last_name', 'phone_number')
         
+    def __init__(self, *args, **kwargs):
+        super(UserForm, self).__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs['class'] = 'form-control'
+        
+class UserProfileForm(forms.ModelForm):
+    #Remove current picture field in form
+    profile_picture = forms.ImageField(required=False, error_messages={'Invalid':("Image files only")}, widget=forms.FileInput)
+    class Meta:
+        model = models.UserProfile
+        fields = ('address_1', 'address_2', 'city', 'zip_code', 'country', 'profile_picture')
+
+    def __init__(self, *args, **kwargs):
+        super(UserProfileForm, self).__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs['class'] = 'form-control'

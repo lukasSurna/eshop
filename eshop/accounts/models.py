@@ -84,3 +84,31 @@ class Account(AbstractBaseUser):
         return reverse("account_detail", kwargs={"pk": self.pk})
 
 
+class UserProfile(models.Model):
+    user = models.OneToOneField(
+        Account, 
+        verbose_name=_("user"), 
+        on_delete=models.CASCADE,
+    )
+    address_1 = models.CharField(_("address_1"), max_length=100, blank=True)
+    address_2 = models.CharField(_("address_2"), max_length=100, blank=True)
+    profile_picture = models.ImageField(_("profile picture"), upload_to='userprofile')
+    city = models.CharField(_("city"), max_length=25, blank=True)
+    zip_code = models.CharField(_("zip code"), max_length=10)
+    country = models.CharField(_("country"), max_length=25)
+    
+
+    class Meta:
+        verbose_name = _("userProfile")
+        verbose_name_plural = _("userProfiles")
+
+    def __str__(self):
+        return f'{self.user.first_name}'
+    
+    def full_address(self):
+        return f'{self.address_1} {self.address_2}'
+
+    def get_absolute_url(self):
+        return reverse("userProfile_detail", kwargs={"pk": self.pk})
+
+
