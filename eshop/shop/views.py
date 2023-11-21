@@ -20,13 +20,13 @@ def store(request, category_slug=None):
     if category_slug != None:
         categories = get_object_or_404(models.Category, slug=category_slug)
         products = models.Product.objects.filter(category=categories, is_available=True)
-        paginator = Paginator(products, 3)
+        paginator = Paginator(products, 6)
         page = request.GET.get('page')
         page_products = paginator.get_page(page)
         product_count = products.count()
     else:
         products = models.Product.objects.all().filter(is_available=True).order_by('id')
-        paginator = Paginator(products, 3)
+        paginator = Paginator(products, 6)
         page = request.GET.get('page')
         page_products = paginator.get_page(page)
         product_count = products.count()
@@ -34,6 +34,7 @@ def store(request, category_slug=None):
     context = {
         'products': page_products,
         'product_count': product_count,
+        'category': categories,
     }
     return render(request, 'store.html', context)
 
