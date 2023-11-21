@@ -1,6 +1,7 @@
 from . import models
 from .views import _cart_id
 
+#cart counter
 def counter(request):
     
     cart_count = 0

@@ -142,11 +142,9 @@ MESSAGE_TAGS = {
     50: "critical",
 }
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'testemailbjrs@gmail.com'
-EMAIL_HOST_PASSWORD = 'zqgc ejwu puxg wnkk'  #using google APP password
-EMAIL_USE_TLS = True
-#Enabling TLS is important for securing the communication between your Django application and the email server, 
-# especially when sending sensitive information, such as account activation links or password reset emails.
+EMAIL_BACKEND = local_settings.EMAIL_BACKEND
+EMAIL_HOST = local_settings.EMAIL_HOST
+EMAIL_PORT = local_settings.EMAIL_PORT
+EMAIL_HOST_USER = local_settings.EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = local_settings.EMAIL_HOST_PASSWORD
+EMAIL_USE_TLS = local_settings.EMAIL_USE_TLS

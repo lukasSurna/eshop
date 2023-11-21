@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 
-
+#unique identifier of user's shopping cart
 def _cart_id(request):
     cart = request.session.session_key
     if not cart:
